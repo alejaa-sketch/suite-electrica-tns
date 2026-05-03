@@ -1781,7 +1781,12 @@ function limpiarFiltros() {
 function calcVD() {
   const I = parseFloat(document.getElementById('vd_i').value) || 0;
   const L = parseFloat(document.getElementById('vd_l').value) || 0;
-  const S = parseFloat(document.getElementById('vd_s').value) || 1;
+  const S = parseFloat(document.getElementById('vd_s').value) || 0;
+if (S === 0) {
+  document.getElementById('res_vd').textContent = '— V';
+  document.getElementById('res_vd_estado').textContent = 'Ingresa sección válida';
+  return; 
+}
   const sys = document.getElementById('vd_sys').value;
   const mat = document.getElementById('vd_mat').value;
   const rho = mat === 'cu' ? 0.0178 : 0.0282; // Valores normativos
