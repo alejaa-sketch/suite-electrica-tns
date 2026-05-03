@@ -1,8 +1,0 @@
-{
-  "name": "Suite Eléctrica TNS",
-  "short_name": "Suite TNS",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#060b14",
-  "theme_color": "#00e5ff"
-}
