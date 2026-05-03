@@ -2418,28 +2418,31 @@ function exportarPb() {
   const total     = neto + ivaMonto + utilMonto;
   const fecha     = new Date().toLocaleDateString('es-CL');
 
-  // Construimos las filas de la tabla
   const rows = pbItems.map((item, idx) => `
-    <tr style="background:${idx%2===0?'#f9fafb':'#fff'}">
+    <tr style="background:${idx%2===0?'#f9fafb':'#ffffff'}">
       <td style="padding:6px 10px">${item.nombre}</td>
       <td style="padding:6px 10px;text-align:center">${item.qty.toLocaleString('es-CL')}</td>
       <td style="padding:6px 10px;text-align:right">$${item.precio.toLocaleString('es-CL')}</td>
       <td style="padding:6px 10px;text-align:right;font-weight:bold">$${(item.qty*item.precio).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
-  // AQUÍ EL ARREGLO: Pasamos todo como un String (Texto HTML) con fondo explícitamente blanco (#ffffff)
-  const contenidoHTML = `
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#222;padding:24px;background-color:#ffffff;min-height:100%;">
+  // EL TRUCO PARA CELULARES: Creamos un elemento real, ancho y con fondo blanco, pero lo escondemos
+  const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.top = '0';
+  tempDiv.style.width = '800px'; 
+  tempDiv.style.backgroundColor = '#ffffff';
+
+  tempDiv.innerHTML = `
+    <div style="font-family:Arial,sans-serif;font-size:12px;color:#222;padding:30px;background-color:#ffffff;min-height:100%;">
       <div style="border-bottom:3px solid #005580;padding-bottom:10px;margin-bottom:12px;">
         <h1 style="color:#005580;margin:0;font-size:18px">⚡ ${nombre}</h1>
         <p style="margin:4px 0 0;color:#666;font-size:11px">Fecha: ${fecha} · Normativa: RIC DS N°8/2020 · SEC Chile · 50 Hz</p>
       </div>
-      <div style="background:#fff3cd;border:1px solid #f5c842;border-radius:4px;padding:8px 12px;margin-bottom:16px;font-size:11px;color:#856404;">
-        ⚠️ Presupuesto estimado referencial. Verificar precios de mercado actuales. Sujeto a condiciones de contrato.
-      </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
         <thead>
-          <tr style="background:#005580;color:#fff;">
+          <tr style="background:#005580;color:#ffffff;">
             <th style="padding:8px 10px;text-align:left">Descripción</th>
             <th style="padding:8px 10px;text-align:center">Cant.</th>
             <th style="padding:8px 10px;text-align:right">P. Unit. ($)</th>
@@ -2451,32 +2454,36 @@ function exportarPb() {
           <tr style="border-top:2px solid #ddd"><td colspan="3" style="padding:6px 10px;text-align:right;color:#555">Neto:</td><td style="padding:6px 10px;text-align:right">$${Math.round(neto).toLocaleString('es-CL')}</td></tr>
           ${ivaMonto ? `<tr><td colspan="3" style="padding:4px 10px;text-align:right;color:#555">IVA 19%:</td><td style="padding:4px 10px;text-align:right">$${Math.round(ivaMonto).toLocaleString('es-CL')}</td></tr>` : ''}
           ${utilMonto ? `<tr><td colspan="3" style="padding:4px 10px;text-align:right;color:#555">Utilidad ${Math.round(margen*100)}%:</td><td style="padding:4px 10px;text-align:right">$${Math.round(utilMonto).toLocaleString('es-CL')}</td></tr>` : ''}
-          <tr style="background:#005580;color:#fff"><td colspan="3" style="padding:10px;text-align:right;font-weight:bold;font-size:14px">TOTAL PROYECTO:</td><td style="padding:10px;text-align:right;font-weight:bold;font-size:14px">$${Math.round(total).toLocaleString('es-CL')}</td></tr>
+          <tr style="background:#005580;color:#ffffff"><td colspan="3" style="padding:10px;text-align:right;font-weight:bold;font-size:14px">TOTAL PROYECTO:</td><td style="padding:10px;text-align:right;font-weight:bold;font-size:14px">$${Math.round(total).toLocaleString('es-CL')}</td></tr>
         </tfoot>
       </table>
-      <p style="font-size:10px;color:#999;border-top:1px solid #eee;padding-top:8px;margin-top:8px">
-        Generado con Suite Eléctrica RIC · DS N°8/2020 Ministerio de Energía · Los valores son referenciales de mercado chileno.
-      </p>
     </div>`;
+
+  // Pegamos el diseño al código interno para que el celular lo "vea"
+  document.body.appendChild(tempDiv);
 
   const opt = {
     margin:       10,
     filename:     nombre.replace(/\s+/g, '_') + '.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    // Agregamos el color de fondo a la librería para evitar que lo imprima transparente
-    html2canvas:  { scale: 2, backgroundColor: '#ffffff', useCORS: true }, 
+    image:        { type: 'jpeg', quality: 1 },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   if (typeof html2pdf !== 'undefined') {
-    // Le entregamos el texto (contenidoHTML) directamente
-    html2pdf().set(opt).from(contenidoHTML).save();
+    html2pdf().set(opt).from(tempDiv).save().then(() => {
+      // Una vez creado el PDF, borramos el elemento oculto para limpiar el código
+      document.body.removeChild(tempDiv);
+    }).catch(err => {
+      console.log(err);
+      document.body.removeChild(tempDiv);
+    });
   } else {
-    // Modo de emergencia por si falla la librería
+    // Modo de emergencia
     const w = window.open('', '_blank');
-    w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#fff;">' + contenidoHTML + '</body></html>');
+    w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#ffffff;">' + tempDiv.innerHTML + '</body></html>');
     w.document.close();
-    setTimeout(() => w.print(), 500);
+    setTimeout(() => { w.print(); document.body.removeChild(tempDiv); }, 500);
   }
 }
 window.onload = function() {
