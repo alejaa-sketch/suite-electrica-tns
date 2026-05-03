@@ -1,0 +1,20 @@
+{
+  "name": "Suite Eléctrica TNS",
+  "short_name": "Suite TNS",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#060b14",
+  "theme_color": "#060b14",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png?text=RIC",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png?text=RIC",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
