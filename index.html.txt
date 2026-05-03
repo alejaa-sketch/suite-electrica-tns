@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⚡ Suite Eléctrica RIC — Técnico Chile</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#060b14">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
