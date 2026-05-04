@@ -2409,102 +2409,105 @@ function plantillaPb() {
 }
 
 function exportarPb() {
-  const nombre = document.getElementById('pb_nombre').value || 'Presupuesto_Electrico';
-  const ivaFactor = parseFloat(document.getElementById('pb_iva').value) || 1.19;
-  const margen = (parseFloat(document.getElementById('pb_margen').value) || 0) / 100;
-  const neto = pbItems.reduce((s, i) => s + i.qty * i.precio, 0);
-  const ivaMonto = ivaFactor > 1 ? neto * (ivaFactor - 1) : 0;
-  const utilMonto = neto * margen;
-  const total = neto + ivaMonto + utilMonto;
-  const fecha = new Date().toLocaleDateString('es-CL');
+    try {
+        const nombre = document.getElementById('pb_nombre').value || 'Presupuesto_Electrico';
+        const ivaFactor = parseFloat(document.getElementById('pb_iva').value) || 1.19;
+        const margen = (parseFloat(document.getElementById('pb_margen').value) || 0) / 100;
+        const neto = pbItems.reduce((s, i) => s + i.qty * i.precio, 0);
+        const ivaMonto = ivaFactor > 1 ? neto * (ivaFactor - 1) : 0;
+        const utilMonto = neto * margen;
+        const total = neto + ivaMonto + utilMonto;
+        const fecha = new Date().toLocaleDateString('es-CL');
 
-  // Cargamos jsPDF desde la misma librería que ya tienes
-  const { jsPDF } = window.jspdf ? window : { jsPDF: window.jspdf }; 
-  const doc = new window.jspdf.jsPDF();
+        // VERIFICACIÓN DE LIBRERÍA: Esto evita que "no pase nada"
+        if (typeof window.jspdf === 'undefined') {
+            alert("Error: La librería de PDF no ha cargado. Revisa tu conexión o el link de script en el head.");
+            return;
+        }
 
-  // --- CONFIGURACIÓN DE ESTILO ---
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(0, 85, 128); // Azul corporativo
-  doc.text("PRESUPUESTO ELÉCTRICO", 15, 20);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Proyecto: ${nombre}`, 15, 30);
-  doc.text(`Fecha: ${fecha} | Región de Aysén`, 15, 35);
-  doc.text("Normativa: Pliego RIC (DS N°8/2020) - SEC Chile", 15, 40);
+        // --- DISEÑO DEL PDF ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(0, 85, 128); 
+        doc.text("PRESUPUESTO ELÉCTRICO", 15, 20);
 
-  // --- TABLA DE ÍTEMS ---
-  doc.setFillColor(0, 85, 128);
-  doc.rect(15, 45, 180, 8, 'F');
-  doc.setTextColor(255);
-  doc.setFont("helvetica", "bold");
-  doc.text("Descripción", 18, 50);
-  doc.text("Cant.", 120, 50);
-  doc.text("Unit. ($)", 145, 50);
-  doc.text("Total ($)", 175, 50);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Proyecto: ${nombre}`, 15, 30);
+        doc.text(`Fecha: ${fecha} | Región de Aysén`, 15, 35);
+        doc.text("Normativa: Pliego RIC (DS N°8/2020) - SEC Chile", 15, 40);
 
-  let y = 58;
-  doc.setTextColor(50);
-  doc.setFont("helvetica", "normal");
+        // Encabezado de tabla
+        doc.setFillColor(0, 85, 128);
+        doc.rect(15, 45, 180, 8, 'F');
+        doc.setTextColor(255);
+        doc.setFont("helvetica", "bold");
+        doc.text("Descripción", 18, 50);
+        doc.text("Cant.", 120, 50);
+        doc.text("Unit. ($)", 145, 50);
+        doc.text("Total ($)", 175, 50);
 
-  pbItems.forEach((item, index) => {
-    if (y > 270) { doc.addPage(); y = 20; } // Salto de página automático
-    
-    // Fondo gris intercalado
-    if (index % 2 === 0) {
-      doc.setFillColor(245, 245, 245);
-      doc.rect(15, y - 4, 180, 7, 'F');
+        let y = 58;
+        doc.setTextColor(50);
+        doc.setFont("helvetica", "normal");
+
+        pbItems.forEach((item, index) => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            if (index % 2 === 0) {
+                doc.setFillColor(245, 245, 245);
+                doc.rect(15, y - 4, 180, 7, 'F');
+            }
+            const subtotal = item.qty * item.precio;
+            doc.text(item.nombre.substring(0, 55), 18, y);
+            doc.text(item.qty.toString(), 125, y, { align: "right" });
+            doc.text(item.precio.toLocaleString('es-CL'), 155, y, { align: "right" });
+            doc.text(subtotal.toLocaleString('es-CL'), 190, y, { align: "right" });
+            y += 7;
+        });
+
+        // Totales
+        y += 10;
+        if (y > 250) { doc.addPage(); y = 20; }
+        doc.setDrawColor(200);
+        doc.line(120, y, 195, y);
+        y += 7;
+        doc.setTextColor(50);
+        doc.text("Neto:", 155, y, { align: "right" });
+        doc.text(`$${Math.round(neto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
+        
+        if (ivaMonto > 0) {
+            y += 7;
+            doc.text("IVA (19%):", 155, y, { align: "right" });
+            doc.text(`$${Math.round(ivaMonto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
+        }
+        if (utilMonto > 0) {
+            y += 7;
+            doc.text(`Utilidad (${Math.round(margen*100)}%):`, 155, y, { align: "right" });
+            doc.text(`$${Math.round(utilMonto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
+        }
+
+        y += 10;
+        doc.setFillColor(0, 85, 128);
+        doc.rect(120, y - 6, 75, 10, 'F');
+        doc.setTextColor(255);
+        doc.setFont("helvetica", "bold");
+        doc.text("TOTAL:", 155, y);
+        doc.text(`$${Math.round(total).toLocaleString('es-CL')}`, 190, y, { align: "right" });
+
+        // Pie de página
+        doc.setTextColor(150);
+        doc.setFontSize(8);
+        doc.text("Generado por Master Suite Eléctrica TNS.", 15, 285);
+
+        doc.save(`${nombre.replace(/\s+/g, '_')}.pdf`);
+        
+    } catch (error) {
+        alert("Error crítico al generar PDF: " + error.message);
     }
-
-    const subtotal = item.qty * item.precio;
-    doc.text(item.nombre.substring(0, 55), 18, y);
-    doc.text(item.qty.toString(), 125, y, { align: "right" });
-    doc.text(item.precio.toLocaleString('es-CL'), 155, y, { align: "right" });
-    doc.text(subtotal.toLocaleString('es-CL'), 190, y, { align: "right" });
-    y += 7;
-  });
-
-  // --- TOTALES ---
-  y += 10;
-  if (y > 250) { doc.addPage(); y = 20; }
-
-  doc.setDrawColor(200);
-  doc.line(120, y, 195, y);
-  y += 7;
-  
-  doc.text("Neto:", 155, y, { align: "right" });
-  doc.text(`$${Math.round(neto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
-  
-  if (ivaMonto > 0) {
-    y += 7;
-    doc.text("IVA (19%):", 155, y, { align: "right" });
-    doc.text(`$${Math.round(ivaMonto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
-  }
-
-  if (utilMonto > 0) {
-    y += 7;
-    doc.text(`Utilidad (${Math.round(margen*100)}%):`, 155, y, { align: "right" });
-    doc.text(`$${Math.round(utilMonto).toLocaleString('es-CL')}`, 190, y, { align: "right" });
-  }
-
-  y += 10;
-  doc.setFillColor(0, 85, 128);
-  doc.rect(120, y - 6, 75, 10, 'F');
-  doc.setTextColor(255);
-  doc.setFont("helvetica", "bold");
-  doc.text("TOTAL:", 155, y);
-  doc.text(`$${Math.round(total).toLocaleString('es-CL')}`, 190, y, { align: "right" });
-
-  // --- PIE DE PÁGINA ---
-  doc.setTextColor(150);
-  doc.setFontSize(8);
-  doc.text("Condiciones: Presupuesto referencial sujeto a evaluación en terreno.", 15, 280);
-  doc.text("Generado por Master Suite Eléctrica TNS.", 15, 285);
-
-  // GUARDAR
-  doc.save(`${nombre.replace(/\s+/g, '_')}.pdf`);
 }
 window.onload = function() {
   filtrarConductores();
