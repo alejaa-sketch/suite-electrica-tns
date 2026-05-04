@@ -2426,10 +2426,15 @@ function exportarPb() {
       <td style="padding: 10px; font-size: 12px; text-align: right; font-weight: bold; color: #111827;">$${(item.qty * item.precio).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
-  const contenidoHTML = `
-    <div style="width: 800px; max-width: 800px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #333333; box-sizing: border-box;">
-      
-      <!-- Encabezado Corporativo -->
+  const tempDiv = document.createElement('div');
+  // Forzamos el bloque a ser de 800px exactos, sin márgenes, pegado a la izquierda.
+  tempDiv.style.width = '800px';
+  tempDiv.style.margin = '0';
+  tempDiv.style.padding = '0';
+  tempDiv.style.backgroundColor = '#ffffff';
+
+  tempDiv.innerHTML = `
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #333333; box-sizing: border-box;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #005580; padding-bottom: 20px; margin-bottom: 30px;">
         <div>
           <h1 style="margin: 0; color: #005580; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">Presupuesto Eléctrico</h1>
@@ -2441,13 +2446,9 @@ function exportarPb() {
           <div style="margin-top: 8px; font-size: 12px; color: #64748b;">Fecha de emisión: <strong style="color: #1e293b;">${fecha}</strong></div>
         </div>
       </div>
-
-      <!-- Cuadro de Normativa -->
       <div style="background-color: #f1f5f9; border-left: 4px solid #38bdf8; padding: 12px 16px; margin-bottom: 30px; font-size: 11px; color: #475569; border-radius: 0 4px 4px 0;">
         <strong style="color: #0f172a;">Parámetros Normativos:</strong> Valores calculados bajo el estándar del Pliego RIC (DS N°8/2020 Ministerio de Energía, SEC Chile). Instalación nominal referencial a 220V/380V — 50 Hz.
       </div>
-
-      <!-- Tabla Principal -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #e2e8f0;">
         <thead>
           <tr style="background-color: #005580; color: #ffffff;">
@@ -2457,12 +2458,8 @@ function exportarPb() {
             <th style="padding: 12px 10px; text-align: right; font-size: 12px; font-weight: 600; width: 25%;">SUBTOTAL</th>
           </tr>
         </thead>
-        <tbody>
-          ${rows}
-        </tbody>
+        <tbody>${rows}</tbody>
       </table>
-
-      <!-- Zona de Totales -->
       <div style="display: flex; justify-content: flex-end;">
         <div style="width: 380px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -2470,16 +2467,8 @@ function exportarPb() {
               <td style="padding: 8px 12px; text-align: right; color: #64748b; border-bottom: 1px solid #e2e8f0;">Subtotal Neto:</td>
               <td style="padding: 8px 12px; text-align: right; color: #333333; font-weight: 500; border-bottom: 1px solid #e2e8f0;">$${Math.round(neto).toLocaleString('es-CL')}</td>
             </tr>
-            ${ivaMonto ? `
-            <tr>
-              <td style="padding: 8px 12px; text-align: right; color: #64748b; border-bottom: 1px solid #e2e8f0;">IVA (19%):</td>
-              <td style="padding: 8px 12px; text-align: right; color: #333333; font-weight: 500; border-bottom: 1px solid #e2e8f0;">$${Math.round(ivaMonto).toLocaleString('es-CL')}</td>
-            </tr>` : ''}
-            ${utilMonto ? `
-            <tr>
-              <td style="padding: 8px 12px; text-align: right; color: #64748b; border-bottom: 1px solid #e2e8f0;">Gestión / Utilidad (${Math.round(margen*100)}%):</td>
-              <td style="padding: 8px 12px; text-align: right; color: #333333; font-weight: 500; border-bottom: 1px solid #e2e8f0;">$${Math.round(utilMonto).toLocaleString('es-CL')}</td>
-            </tr>` : ''}
+            ${ivaMonto ? `<tr><td style="padding: 8px 12px; text-align: right; color: #64748b; border-bottom: 1px solid #e2e8f0;">IVA (19%):</td><td style="padding: 8px 12px; text-align: right; color: #333333; font-weight: 500; border-bottom: 1px solid #e2e8f0;">$${Math.round(ivaMonto).toLocaleString('es-CL')}</td></tr>` : ''}
+            ${utilMonto ? `<tr><td style="padding: 8px 12px; text-align: right; color: #64748b; border-bottom: 1px solid #e2e8f0;">Gestión / Utilidad (${Math.round(margen*100)}%):</td><td style="padding: 8px 12px; text-align: right; color: #333333; font-weight: 500; border-bottom: 1px solid #e2e8f0;">$${Math.round(utilMonto).toLocaleString('es-CL')}</td></tr>` : ''}
             <tr style="background-color: #005580; color: #ffffff;">
               <td style="padding: 14px 12px; text-align: right; font-size: 15px; font-weight: bold; border-radius: 4px 0 0 4px;">TOTAL PROYECTO:</td>
               <td style="padding: 14px 12px; text-align: right; font-size: 16px; font-weight: bold; border-radius: 0 4px 4px 0;">$${Math.round(total).toLocaleString('es-CL')}</td>
@@ -2487,8 +2476,6 @@ function exportarPb() {
           </table>
         </div>
       </div>
-
-      <!-- Firmas y Notas Finales -->
       <div style="margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end;">
         <div style="font-size: 10px; color: #94a3b8; max-width: 55%; line-height: 1.4;">
           <p style="margin: 0 0 4px;"><strong style="color: #64748b;">Condiciones:</strong> Presupuesto estimado referencial. Sujeto a evaluación en terreno y disponibilidad de materiales en el mercado regional (Aysén).</p>
@@ -2499,30 +2486,50 @@ function exportarPb() {
           <div style="font-size: 12px; color: #475569; font-weight: 500;">Firma del Cliente / Aceptación</div>
         </div>
       </div>
-      
     </div>`;
+
+  // TÉCNICA "HABITACIÓN LIMPIA": Ocultamos temporalmente toda la app
+  const hiddenElements = [];
+  Array.from(document.body.children).forEach(child => {
+    if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
+      hiddenElements.push({ el: child, display: child.style.display });
+      child.style.display = 'none';
+    }
+  });
+
+  // Forzamos al body del teléfono a expandirse a 800px
+  const originalBodyWidth = document.body.style.width;
+  const originalBodyOverflow = document.body.style.overflow;
+  document.body.style.width = '800px';
+  document.body.style.overflow = 'visible';
+
+  // Añadimos solo el PDF y vamos a la coordenada 0,0
+  document.body.appendChild(tempDiv);
+  window.scrollTo(0, 0);
 
   const opt = {
     margin:       10,
     filename:     nombre.replace(/\s+/g, '_') + '.pdf',
     image:        { type: 'jpeg', quality: 1 },
-    html2canvas:  { 
-      scale: 2, 
-      useCORS: true, 
-      backgroundColor: '#ffffff', 
-      width: 800,        // <-- EL SEGURO CONTRA CORTES
-      windowWidth: 800   // <-- EL SEGURO DE PANTALLA
-    },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, windowWidth: 800 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
+  // Función para devolver todo a la normalidad al terminar
+  const restoreUI = () => {
+    if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
+    document.body.style.width = originalBodyWidth;
+    document.body.style.overflow = originalBodyOverflow;
+    hiddenElements.forEach(item => item.el.style.display = item.display);
+  };
+
   if (typeof html2pdf !== 'undefined') {
-    html2pdf().set(opt).from(contenidoHTML).save();
+    html2pdf().set(opt).from(tempDiv).save().then(restoreUI).catch(restoreUI);
   } else {
     const w = window.open('', '_blank');
-    w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#ffffff;">' + contenidoHTML + '</body></html>');
+    w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#ffffff;">' + tempDiv.innerHTML + '</body></html>');
     w.document.close();
-    setTimeout(() => w.print(), 500);
+    setTimeout(() => { w.print(); restoreUI(); }, 500);
   }
 }
 window.onload = function() {
