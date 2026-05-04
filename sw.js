@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ric-suite-v8';
+const CACHE_NAME = 'ric-suite-v9';
 const urlsToCache = [
   './index.html',
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
