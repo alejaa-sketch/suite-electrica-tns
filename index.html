@@ -2418,7 +2418,6 @@ function exportarPb() {
   const total     = neto + ivaMonto + utilMonto;
   const fecha     = new Date().toLocaleDateString('es-CL');
 
-  // Forzamos el color de texto a #333333 (Gris oscuro/Negro) para que no herede el texto claro de tu web
   const rows = pbItems.map((item, idx) => `
     <tr style="background-color: ${idx % 2 === 0 ? '#f8f9fa' : '#ffffff'}; color: #333333; border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 10px; font-size: 12px; border-right: 1px solid #e2e8f0;">${item.nombre}</td>
@@ -2427,11 +2426,15 @@ function exportarPb() {
       <td style="padding: 10px; font-size: 12px; text-align: right; font-weight: bold; color: #111827;">$${(item.qty * item.precio).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
+  // Anclamos el div físicamente a la esquina superior izquierda
   const tempDiv = document.createElement('div');
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '0px';
+  tempDiv.style.top = '0px';
   tempDiv.style.width = '800px';
   tempDiv.style.backgroundColor = '#ffffff';
+  tempDiv.style.zIndex = '-9999';
 
-  // Nuevo diseño: Tipografía limpia, encabezados divididos, nota legal formal y zona de firma
   tempDiv.innerHTML = `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #333333;">
       
@@ -2508,21 +2511,26 @@ function exportarPb() {
       
     </div>`;
 
+  document.body.appendChild(tempDiv);
+
   const opt = {
     margin:       10,
     filename:     nombre.replace(/\s+/g, '_') + '.pdf',
     image:        { type: 'jpeg', quality: 1 },
-    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 },
+    // LA MAGIA ESTÁ AQUÍ: scrollX: 0 y scrollY: 0 obligan a capturar desde el borde izquierdo exacto
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, windowWidth: 800 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   if (typeof html2pdf !== 'undefined') {
-    html2pdf().set(opt).from(tempDiv).save();
+    html2pdf().set(opt).from(tempDiv).save().then(() => {
+      document.body.removeChild(tempDiv); // Limpiamos la pantalla al terminar
+    });
   } else {
     const w = window.open('', '_blank');
     w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#ffffff;">' + tempDiv.innerHTML + '</body></html>');
     w.document.close();
-    setTimeout(() => w.print(), 500);
+    setTimeout(() => { w.print(); document.body.removeChild(tempDiv); }, 500);
   }
 }
 window.onload = function() {
