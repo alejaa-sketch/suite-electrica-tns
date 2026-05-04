@@ -2426,14 +2426,10 @@ function exportarPb() {
       <td style="padding:6px 10px;text-align:right;font-weight:bold">$${(item.qty*item.precio).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
-  // EL ENGAÑO PARA ANDROID: Lo ponemos en la coordenada 0,0 pero oculto detrás de todo
+  // VERSIÓN UNIVERSAL: Creamos el elemento puro, sin inyectarlo ni esconderlo en la pantalla
   const tempDiv = document.createElement('div');
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.top = '0';
-  tempDiv.style.left = '0';
-  tempDiv.style.width = '800px'; 
+  tempDiv.style.width = '800px';
   tempDiv.style.backgroundColor = '#ffffff';
-  tempDiv.style.zIndex = '-10000'; // Lo esconde detrás de tu app
 
   tempDiv.innerHTML = `
     <div style="font-family:Arial,sans-serif;font-size:12px;color:#222;padding:30px;background-color:#ffffff;min-height:100%;">
@@ -2460,26 +2456,22 @@ function exportarPb() {
       </table>
     </div>`;
 
-  document.body.appendChild(tempDiv);
-
-  // Le forzamos al generador a usar un ancho fijo de 800px para que no se maree con la pantalla del celular
   const opt = {
     margin:       10,
     filename:     nombre.replace(/\s+/g, '_') + '.pdf',
     image:        { type: 'jpeg', quality: 1 },
-    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 800, windowWidth: 800 },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   if (typeof html2pdf !== 'undefined') {
-    html2pdf().set(opt).from(tempDiv).save().then(() => {
-      document.body.removeChild(tempDiv);
-    });
+    // Le pasamos el elemento directo a la librería. Ella se encarga de crear un entorno seguro para tomar la foto.
+    html2pdf().set(opt).from(tempDiv).save();
   } else {
     const w = window.open('', '_blank');
     w.document.write('<html><head><title>' + nombre + '</title></head><body style="margin:0;background:#ffffff;">' + tempDiv.innerHTML + '</body></html>');
     w.document.close();
-    setTimeout(() => { w.print(); document.body.removeChild(tempDiv); }, 500);
+    setTimeout(() => w.print(), 500);
   }
 }
 window.onload = function() {
