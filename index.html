@@ -2426,9 +2426,8 @@ function exportarPb() {
       <td style="padding: 10px; font-size: 12px; text-align: right; font-weight: bold; color: #111827;">$${(item.qty * item.precio).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
-  // Creamos TODO el diseño como una variable de texto, asegurando los 800px de ancho desde aquí
   const contenidoHTML = `
-    <div style="width: 800px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #333333;">
+    <div style="width: 800px; max-width: 800px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #333333; box-sizing: border-box;">
       
       <!-- Encabezado Corporativo -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #005580; padding-bottom: 20px; margin-bottom: 30px;">
@@ -2507,13 +2506,17 @@ function exportarPb() {
     margin:       10,
     filename:     nombre.replace(/\s+/g, '_') + '.pdf',
     image:        { type: 'jpeg', quality: 1 },
-    // Los seguros anti-tijera y anti-blanco:
-    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, windowWidth: 800 },
+    html2canvas:  { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: '#ffffff', 
+      width: 800,        // <-- EL SEGURO CONTRA CORTES
+      windowWidth: 800   // <-- EL SEGURO DE PANTALLA
+    },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   if (typeof html2pdf !== 'undefined') {
-    // Le entregamos el texto directamente. Cero "z-index" y cero enredos visuales.
     html2pdf().set(opt).from(contenidoHTML).save();
   } else {
     const w = window.open('', '_blank');
